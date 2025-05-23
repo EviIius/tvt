@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { FileSpreadsheet, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { Button } from "@/components/ui/button"; // Import the Button component
 
 interface UploadExcelProps {
   onUpload: (file: File, headers: string[]) => void;
@@ -79,35 +80,35 @@ export default function UploadExcel({ onUpload }: UploadExcelProps) {
   return (
     <div className="space-y-4">
       <div
-        className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors duration-200 ${isDragging ? 'border-[#d71e28] bg-[#fff0f0]' : 'border-[#e5e7eb] bg-[#f9fafb]'}`}
+        className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors duration-200 ${isDragging ? 'border-primary bg-primary/10' : 'border-border bg-background'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="rounded-full bg-[#ffeaea] p-4 mb-2">
-            <FileSpreadsheet className="h-12 w-12 text-[#d71e28]" />
+          <div className="rounded-full bg-primary/20 p-4 mb-2">
+            <FileSpreadsheet className="h-12 w-12 text-primary" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Upload Excel File</h3>
-            <p className="text-sm text-gray-400">Drag and drop your Excel file here, or click to browse</p>
+            <h3 className="text-lg font-semibold text-foreground">Upload Excel File</h3>
+            <p className="text-sm text-muted-foreground">Drag and drop your Excel file here, or click to browse</p>
           </div>
           <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFileChange} />
-          <button type="button" onClick={handleButtonClick} className="flex items-center gap-2 px-6 py-2 rounded border border-[#e5e7eb] bg-white font-medium text-base shadow-sm hover:bg-[#f6fafd] transition">
-            <Upload className="h-5 w-5" /> Browse Files
-          </button>
+          <Button type="button" variant="outline" onClick={handleButtonClick}>
+            <Upload className="h-5 w-5 mr-2" /> Browse Files
+          </Button>
         </div>
       </div>
       {fileName && (
-        <div className="flex items-center justify-between rounded-lg border p-3 mt-2 bg-[#f6fafd]">
+        <div className="flex items-center justify-between rounded-lg border border-border p-3 mt-2 bg-secondary/50">
           <div className="flex items-center space-x-3">
-            <FileSpreadsheet className="h-5 w-5 text-[#d71e28]" />
-            <span className="text-sm font-medium">{fileName}</span>
+            <FileSpreadsheet className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-foreground">{fileName}</span>
           </div>
-          <button type="button" className="text-blue-600 text-xs" onClick={() => setFileName('')}>Change</button>
+          <Button variant="link" size="sm" onClick={() => { setFileName(''); setError(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}>Change</Button>
         </div>
       )}
-      {error && <div className="rounded-lg bg-red-100 p-3 text-red-700 mt-2">{error}</div>}
+      {error && <div className="rounded-lg bg-destructive/20 p-3 text-destructive mt-2">{error}</div>}
     </div>
   );
 }

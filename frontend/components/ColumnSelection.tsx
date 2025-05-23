@@ -1,8 +1,8 @@
 "use client"
 
-import { Checkbox } from "../../ui/checkbox"
-import { Label } from "../../ui/label"
-import { ScrollArea } from "../../ui/scroll-area"
+import { Checkbox } from "@/ui/checkbox"
+import { Label } from "@/ui/label"
+import { ScrollArea } from "@/ui/scroll-area"
 import React from 'react';
 
 interface ColumnSelectionProps {
@@ -26,49 +26,45 @@ export default function ColumnSelection({ columns, selectedColumns, onSelectionC
         Select the columns you want to analyze. You can select multiple columns.
       </div>
 
-      <ScrollArea className="h-[300px] rounded-md border p-4 bg-white"> {/* Added bg-white for consistency if needed */}
+      <ScrollArea className="h-[300px] rounded-md border p-4 bg-white">
         <div className="space-y-4">
           {columns.map((column, index) => {
             const isString = typeof column === 'string';
-            
-            // Critical: Log the type and value of each item in the columns array
-            console.log(`ColumnSelection Item [${index}]:`, { type: typeof column, value: column });
-
-            const itemKey = isString ? `${column}-${index}` : `column-idx-${index}`;
-            const itemId = isString ? `column-${column.replace(/\\s+/g, '-')}-${index}` : `column-idx-${index}`;
-            const columnDisplay = isString ? column : JSON.stringify(column);
-            // For selection, we can only meaningfully use strings.
-            // If it's not a string, it cannot be part of selectedColumns (which is string[])
-            // So, the checkbox for non-strings should be disabled.
+            console.log(`Column item [${index}] type:`, typeof column, `Value:`, column);
 
             return (
-              <div key={itemKey} className="flex items-center space-x-2">
-                <Checkbox
-                  id={itemId}
-                  checked={isString && selectedColumns.includes(column)}
-                  onCheckedChange={() => {
-                    if (isString) {
-                      handleColumnToggle(column);
-                    } else {
-                      // This case should ideally not be reachable if checkbox is disabled
-                      console.warn("Attempted to toggle a non-string column representation:", column);
-                    }
-                  }}
-                  disabled={!isString} // Disable checkbox if the column item is not a string
-                />
-                <Label
-                  htmlFor={itemId}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {columnDisplay}
-                </Label>
+              <div key={index} className="flex items-center space-x-2">
+                {isString ? (
+                  <>
+                    <Checkbox
+                      id={`column-${index}`}
+                      checked={selectedColumns.includes(column)}
+                      onCheckedChange={() => handleColumnToggle(column)} // Corrected: Radix Checkbox uses onCheckedChange
+                    />
+                    <Label htmlFor={`column-${index}`} className="font-normal">
+                      {column}
+                    </Label>
+                  </>
+                ) : (
+                  <div className="text-red-500">
+                    <p>Invalid column data (not a string):</p>
+                    <pre>{JSON.stringify(column, null, 2)}</pre>
+                    <Checkbox
+                      id={`column-${index}`}
+                      disabled={true}
+                    />
+                     <Label htmlFor={`column-${index}`} className="font-normal text-gray-400">
+                       Invalid Item
+                    </Label>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       </ScrollArea>
 
-      <div className="text-sm mt-4"> {/* Added mt-4 for spacing if needed */}
+      <div className="text-sm mt-4">
         <span className="font-medium">Selected columns:</span>{" "}
         {selectedColumns.length === 0 ? (
           <span className="text-muted-foreground">None selected</span>

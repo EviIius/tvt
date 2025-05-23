@@ -2,12 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: 210 40% 98%; /* Light Cool Gray */
+    --foreground: 215 25% 27%; /* Dark Slate Blue */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 215 25% 27%; /* Dark Slate Blue */
+ 
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 215 25% 27%; /* Dark Slate Blue */
+ 
+    --primary: 200 90% 50%; /* Bright Cerulean Blue */
+    --primary-foreground: 0 0% 100%; /* White */
+ 
+    --secondary: 210 30% 90%; /* Light Grayish Blue */
+    --secondary-foreground: 215 25% 27%; /* Dark Slate Blue */
+ 
+    --muted: 210 30% 90%; /* Light Grayish Blue */
+    --muted-foreground: 215 15% 50%; /* Medium Slate Blue */
+ 
+    --accent: 160 70% 45%; /* Bright Teal */
+    --accent-foreground: 215 25% 27%; /* Dark Slate Blue */
+ 
+    --destructive: 0 70% 55%; /* Vivid Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    --border: 210 20% 85%; /* Light Gray */
+    --input: 210 20% 85%; /* Light Gray */
+    --ring: 200 90% 50%; /* Bright Cerulean Blue for focus rings */
+ 
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 220 25% 12%; /* Very Dark Blue */
+    --foreground: 210 30% 90%; /* Light Grayish Blue */
+
+    --card: 220 25% 18%; /* Dark Desaturated Blue */
+    --card-foreground: 210 30% 90%; /* Light Grayish Blue */
+
+    --popover: 220 25% 18%; /* Dark Desaturated Blue */
+    --popover-foreground: 210 30% 90%; /* Light Grayish Blue */
+
+    --primary: 200 80% 60%; /* Lighter Cerulean Blue */
+    --primary-foreground: 220 25% 12%; /* Very Dark Blue */
+
+    --secondary: 220 20% 25%; /* Dark Grayish Blue */
+    --secondary-foreground: 210 30% 90%; /* Light Grayish Blue */
+
+    --muted: 220 20% 25%; /* Dark Grayish Blue */
+    --muted-foreground: 210 20% 70%; /* Medium Grayish Blue */
+
+    --accent: 160 60% 55%; /* Lighter Teal */
+    --accent-foreground: 220 25% 12%; /* Very Dark Blue */
+
+    --destructive: 0 60% 65%; /* Lighter Vivid Red */
+    --destructive-foreground: 220 25% 12%; /* Very Dark Blue */
+
+    --border: 220 15% 30%; /* Dark Gray */
+    --input: 220 15% 30%; /* Dark Gray */
+    --ring: 200 80% 60%; /* Lighter Cerulean Blue for dark mode focus rings */
+  }
+}
+ 
 body {
+  /* Tailwind will apply bg-background and text-foreground based on the theme config */
   font-family: sans-serif; /* Basic font stack */
-  background-color: #f0f0f0; /* Simple test background */
 }
 
 /* Test a simple component style if needed */
+/*
 .test-style {
   @apply bg-blue-500 text-white p-4;
 }
+*/

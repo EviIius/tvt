@@ -1,8 +1,8 @@
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import ColumnSelection from '@/components/ColumnSelection';
-import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
-import { Button } from '../../ui/button';
+import { Button } from '@/components/ui/button';
 
 export default function SelectColumnsPage() {
   const router = useRouter();
@@ -13,48 +13,62 @@ export default function SelectColumnsPage() {
     if (router.query.headers) {
       try {
         const parsedHeaders = JSON.parse(router.query.headers as string);
-        setHeaders(parsedHeaders);
+        if (Array.isArray(parsedHeaders) && parsedHeaders.every(h => typeof h === 'string')) {
+          setHeaders(parsedHeaders);
+        } else {
+          console.error("Parsed headers are not an array of strings:", parsedHeaders);
+          setHeaders([]);
+        }
       } catch (error) {
-        console.error("Failed to parse headers:", error);
-        // Optionally, redirect to home or show an error message
-        router.push('/');
+        console.error("Failed to parse headers from query:", error);
+        setHeaders([]);
       }
-    } else if (router.isReady) {
-      // If headers are not in query and router is ready, redirect or show error
-      // This handles cases where the page is accessed directly without headers
-      console.warn("No headers provided in query params.");
-      // router.push('/'); // Or some error page
+    } else if (router.isReady && !router.query.headers) {
+      console.warn("No headers provided in query params. Displaying with no columns.");
+      setHeaders([]);
     }
-  }, [router.query, router.isReady, router]);
+  }, [router.query, router.isReady]);
 
   const handleNext = () => {
-    // Navigate to the next step, passing selectedColumns
-    // For now, let's log it
     console.log('Selected columns:', selectedColumns);
-    // router.push({ pathname: '/configure-clusters', query: { selectedColumns: JSON.stringify(selectedColumns) } });
+    router.push({ pathname: '/configure-clusters', query: { selectedColumns: JSON.stringify(selectedColumns) } });
   };
 
   const handleBack = () => {
     router.push('/');
   };
 
+  if (!router.isReady) {
+    return <Layout currentStep={1}><div className="p-8 text-center">Loading page...</div></Layout>;
+  }
+
   return (
     <Layout currentStep={1}>
-      <div className="bg-white rounded-xl shadow p-8 max-w-4xl mx-auto mt-8">
-        <h3 className="text-xl font-bold mb-2">Select Columns for Analysis</h3>
-        <p className="text-gray-500 mb-6">Choose the columns from your uploaded file that you wish to include in the topic modeling analysis.</p>
-        {headers.length > 0 ? (
-          <ColumnSelection
-            columns={headers}
-            selectedColumns={selectedColumns}
-            onSelectionChange={setSelectedColumns}
-          />
-        ) : (
-          <p className="text-center text-gray-500">Loading columns or no columns found. Please ensure you have uploaded a file with headers.</p>
-        )}
-        <div className="flex justify-between mt-8">
-          <Button variant="outline" onClick={handleBack}>Back</Button>
-          <Button onClick={handleNext} disabled={selectedColumns.length === 0} className="bg-[#D71E28] text-white">Next</Button>
+      <div className="bg-card rounded-xl shadow p-8 max-w-4xl mx-auto mt-8">
+        <h3 className="text-xl font-semibold mb-1 text-foreground">Select Columns</h3>
+        <p className="text-muted-foreground mb-6">
+          Choose the columns from your dataset that you want to include in the topic modeling analysis.
+        </p>
+        
+        <ColumnSelection
+          columns={headers}
+          selectedColumns={selectedColumns}
+          onSelectionChange={setSelectedColumns}
+        />
+
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
+          <Button
+            onClick={handleBack}
+            variant="outline"
+          >
+            Back
+          </Button>
+          <Button
+            onClick={handleNext}
+            disabled={selectedColumns.length === 0}
+          >
+            Next
+          </Button>
         </div>
       </div>
     </Layout>
