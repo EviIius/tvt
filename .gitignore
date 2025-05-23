@@ -53,3 +53,24 @@ frontend/yarn-error.log*
 # macOS
 .DS_Store
 /frontend/.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.mypy_cache/
+.pytest_cache/
+.tox/
+pip-wheel-metadata/
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Virtual environment
+.venv
+venv/
+ENV/
+env/

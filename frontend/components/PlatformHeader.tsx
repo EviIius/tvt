@@ -1,4 +1,4 @@
-export default function WellsFargoHeader() {
+export default function PlatformHeader() {
   return (
     <div className="w-full">
       <div className="bg-primary text-primary-foreground py-3 px-6">

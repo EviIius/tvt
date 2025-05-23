@@ -10,28 +10,54 @@ export default function SelectColumnsPage() {
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
 
   useEffect(() => {
+    let initialHeaders: string[] = [];
+    let initialSelectedColumns: string[] = [];
+
     if (router.query.headers) {
       try {
         const parsedHeaders = JSON.parse(router.query.headers as string);
         if (Array.isArray(parsedHeaders) && parsedHeaders.every(h => typeof h === 'string')) {
-          setHeaders(parsedHeaders);
+          initialHeaders = parsedHeaders;
         } else {
           console.error("Parsed headers are not an array of strings:", parsedHeaders);
-          setHeaders([]);
         }
       } catch (error) {
         console.error("Failed to parse headers from query:", error);
-        setHeaders([]);
       }
-    } else if (router.isReady && !router.query.headers) {
+    }
+
+    if (router.query.selectedColumns) {
+      try {
+        const parsedSelectedColumns = JSON.parse(router.query.selectedColumns as string);
+        if (Array.isArray(parsedSelectedColumns) && parsedSelectedColumns.every(c => typeof c === 'string')) {
+          initialSelectedColumns = parsedSelectedColumns;
+        } else {
+          console.error("Parsed selected columns are not an array of strings:", parsedSelectedColumns);
+        }
+      } catch (error) {
+        console.error("Failed to parse selected columns from query:", error);
+      }
+    }
+
+    setHeaders(initialHeaders);
+    setSelectedColumns(initialSelectedColumns);
+
+    if (router.isReady && !router.query.headers) {
       console.warn("No headers provided in query params. Displaying with no columns.");
-      setHeaders([]);
+      // setHeaders([]); // Already handled by initialHeaders default
+      // setSelectedColumns([]); // Already handled by initialSelectedColumns default
     }
   }, [router.query, router.isReady]);
 
   const handleNext = () => {
     console.log('Selected columns:', selectedColumns);
-    router.push({ pathname: '/configure-clusters', query: { selectedColumns: JSON.stringify(selectedColumns) } });
+    router.push({ 
+      pathname: '/configure-clusters', 
+      query: { 
+        selectedColumns: JSON.stringify(selectedColumns),
+        allHeaders: JSON.stringify(headers) // Pass all headers to the configure page
+      } 
+    });
   };
 
   const handleBack = () => {
