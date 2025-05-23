@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: sans-serif; /* Basic font stack */
+  background-color: #f0f0f0; /* Simple test background */
+}
+
+/* Test a simple component style if needed */
+.test-style {
+  @apply bg-blue-500 text-white p-4;
+}
