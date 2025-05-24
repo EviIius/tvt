@@ -11,7 +11,7 @@ import { InfoCircledIcon } from '@radix-ui/react-icons'; // Or any other suitabl
 const machineLearningTypes = [
   { value: 'clustering', label: 'Clustering' },
   { value: 'classification', label: 'Classification (Coming Soon)', disabled: true },
-  { value: 'regression', label: 'Regression (Coming Soon)', disabled: true },
+  { value: 'regression', label: 'Regression' }, // Enabled
 ];
 
 const clusteringAlgorithms = [
@@ -20,13 +20,20 @@ const clusteringAlgorithms = [
   // Add other clustering algorithms here
 ];
 
+const regressionAlgorithms = [
+  { value: 'linear', label: 'Linear Regression' },
+  { value: 'polynomial', label: 'Polynomial Regression (Coming Soon)', disabled: true },
+  // Add other regression algorithms here
+];
+
 export default function ConfigureModelForm() {
   const router = useRouter();
-  const [allHeaders, setAllHeaders] = useState<string[]>([]); // Store all headers from previous page
+  const [allHeaders, setAllHeaders] = useState<string[]>([]);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [mlType, setMlType] = useState<string>('clustering');
-  const [algorithm, setAlgorithm] = useState<string>('kmeans');
+  const [algorithm, setAlgorithm] = useState<string>('kmeans'); // Default to kmeans
   const [numClusters, setNumClusters] = useState<number>(3);
+  const [polynomialDegree, setPolynomialDegree] = useState<number>(2); // Example for regression
 
   useEffect(() => {
     if (router.query.selectedColumns) {
@@ -58,15 +65,33 @@ export default function ConfigureModelForm() {
     }
   }, [router.query, router.isReady]);
 
+  // Update algorithm when mlType changes to a valid default
+  useEffect(() => {
+    if (mlType === 'clustering') {
+      setAlgorithm('kmeans');
+    } else if (mlType === 'regression') {
+      setAlgorithm('linear');
+    }
+    // Add more conditions if other ML types are enabled
+  }, [mlType]);
+
   const handleNext = async () => {
-    console.log('Configuration:', { mlType, algorithm, numClusters, selectedColumns });
-    // Pass allHeaders along to the next step if needed, or just the config
-    router.push({ 
-      pathname: '/view-results', 
-      query: { 
-        config: JSON.stringify({ mlType, algorithm, numClusters, selectedColumns }),
-        allHeaders: JSON.stringify(allHeaders) // Pass allHeaders to results page if needed
-      } 
+    let config: any = { mlType, algorithm, selectedColumns };
+    if (mlType === 'clustering') {
+      config.numClusters = numClusters;
+    } else if (mlType === 'regression') {
+      if (algorithm === 'polynomial') {
+        config.polynomialDegree = polynomialDegree;
+      }
+      // Add other regression-specific params
+    }
+    console.log('Configuration:', config);
+    router.push({
+      pathname: '/view-results',
+      query: {
+        config: JSON.stringify(config),
+        allHeaders: JSON.stringify(allHeaders)
+      }
     });
   };
 
@@ -78,6 +103,21 @@ export default function ConfigureModelForm() {
         selectedColumns: JSON.stringify(selectedColumns) // Pass current selection back
       } 
     });
+  };
+
+  const renderAlgorithmOptions = () => {
+    if (mlType === 'clustering') {
+      return clusteringAlgorithms;
+    } else if (mlType === 'regression') {
+      return regressionAlgorithms;
+    }
+    return [];
+  };
+
+  const getAlgorithmLabel = () => {
+    if (mlType === 'clustering') return 'Clustering Algorithm';
+    if (mlType === 'regression') return 'Regression Algorithm';
+    return 'Algorithm';
   };
 
   return (
@@ -103,24 +143,25 @@ export default function ConfigureModelForm() {
           </Select>
         </div>
 
+        {/* Algorithm Selection - Dynamic based on mlType */}
+        <div className="space-y-2">
+          <Label htmlFor="algorithm">{getAlgorithmLabel()}</Label>
+          <Select value={algorithm} onValueChange={setAlgorithm} disabled={renderAlgorithmOptions().length === 0}>
+            <SelectTrigger id="algorithm">
+              <SelectValue placeholder={`Select ${getAlgorithmLabel()}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {renderAlgorithmOptions().map((alg) => (
+                <SelectItem key={alg.value} value={alg.value} disabled={alg.disabled}>
+                  {alg.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {mlType === 'clustering' && (
           <>
-            <div className="space-y-2">
-              <Label htmlFor="algorithm">Clustering Algorithm</Label>
-              <Select value={algorithm} onValueChange={setAlgorithm}>
-                <SelectTrigger id="algorithm">
-                  <SelectValue placeholder="Select Algorithm" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clusteringAlgorithms.map((alg) => (
-                    <SelectItem key={alg.value} value={alg.value} disabled={alg.disabled}>
-                      {alg.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="num-clusters">Number of Clusters (K): {numClusters}</Label>
               <Slider
@@ -138,8 +179,25 @@ export default function ConfigureModelForm() {
             </div>
           </>
         )}
-        {/* Add sections for other ML types (classification, regression) here when implemented */}
 
+        {mlType === 'regression' && algorithm === 'polynomial' && (
+          <div className="space-y-2">
+            <Label htmlFor="poly-degree">Polynomial Degree: {polynomialDegree}</Label>
+            <Slider
+              id="poly-degree"
+              min={2}
+              max={10}
+              step={1}
+              value={[polynomialDegree]}
+              onValueChange={(value) => setPolynomialDegree(value[0])}
+              className="mt-2"
+            />
+            <p className="text-sm text-muted-foreground">
+              Select the degree for polynomial regression (2-10).
+            </p>
+          </div>
+        )}
+        
         <Alert>
           <InfoCircledIcon className="h-4 w-4" /> {/* Adjust icon as needed */}
           <AlertTitle>What happens next?</AlertTitle>

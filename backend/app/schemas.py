@@ -2,19 +2,32 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 
 class ClusteringDataRequest(BaseModel):
-    documents: List[str]
-    # Add other parameters like number of clusters, etc.
-    num_clusters: int = 5 
+    documents: List[Dict[str, Any]] # Changed from List[str]
+    selected_columns: List[str]
+    num_clusters: int = 5
+    # frontend also sends all_headers, but it's not strictly needed for backend processing if selected_columns is accurate
+    # all_headers: List[str] | None = None 
 
-class ClusteringResult(BaseModel):
-    # Define what a single cluster result might look like
-    cluster_id: int
-    documents: List[str]
-    # You might include other metrics or properties for each cluster
-    # e.g., top_terms: List[str], centroid_vector: List[float]
+class ClusterPoint(BaseModel):
+    x: float
+    y: float
+    topic_id: str # Renamed from cluster, to match frontend's expectation of a topic identifier
+    text_snippet: str # To provide some context for the point on the frontend
+
+class Topic(BaseModel):
+    id: str
+    name: str
+    count: int # Renamed from document_count to match frontend
+    percentage: str # Will be formatted as string e.g., "33.5%"
+    # summary: str # Optional, can be added later if topic summarization is implemented
+
+# This schema might not be directly returned by the endpoint if ClusteringResponse is more comprehensive
+# class ClusteringResult(BaseModel):
+#     cluster_id: int
+#     documents: List[str] 
 
 class ClusteringResponse(BaseModel):
     message: str
-    results: List[ClusteringResult]
-    # Any additional metadata or visualization data can be added here
-    # e.g., scatter_plot_data: Dict[str, Any]
+    scatter_plot_data: List[ClusterPoint]
+    topics: List[Topic]
+    # Any other data like raw cluster assignments, detailed statistics, etc. can be added here

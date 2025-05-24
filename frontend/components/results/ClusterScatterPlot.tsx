@@ -1,12 +1,12 @@
 "use client"
 
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, ZAxis } from "recharts"
-import { ClusterPoint, Topic } from "@/types/api"
+import { ClusterPoint, Topic } from "@/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ClusterScatterPlotProps {
-  data: NonNullable<ClusterPoint[]>
-  topics: NonNullable<Topic[]>
+  data: ClusterPoint[] // Changed NonNullable<ClusterPoint[]> to ClusterPoint[]
+  topics: Topic[]    // Changed NonNullable<Topic[]> to Topic[]
   colors: string[]
 }
 

@@ -29,6 +29,12 @@
       ],
       "@/ui/*": [
         "components/ui/*"
+      ],
+      "@/types": [
+        "types/index.ts"
+      ],
+      "@/types/*": [
+        "types/*"
       ]
     },
     "incremental": true
