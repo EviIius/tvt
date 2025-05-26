@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { InfoCircledIcon } from '@radix-ui/react-icons'; // Or any other suitable icon
+import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { Progress } from "@/components/ui/progress";
 
 const machineLearningTypes = [
   { value: 'clustering', label: 'Clustering' },
@@ -31,9 +32,11 @@ export default function ConfigureModelForm() {
   const [allHeaders, setAllHeaders] = useState<string[]>([]);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [mlType, setMlType] = useState<string>('clustering');
-  const [algorithm, setAlgorithm] = useState<string>('kmeans'); // Default to kmeans
+  const [algorithm, setAlgorithm] = useState<string>('kmeans');
   const [numClusters, setNumClusters] = useState<number>(3);
-  const [polynomialDegree, setPolynomialDegree] = useState<number>(2); // Example for regression
+  const [polynomialDegree, setPolynomialDegree] = useState<number>(2);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Added loading state
+  const [progress, setProgress] = useState<number>(0); // Added progress state
 
   useEffect(() => {
     if (router.query.selectedColumns) {
@@ -75,7 +78,33 @@ export default function ConfigureModelForm() {
     // Add more conditions if other ML types are enabled
   }, [mlType]);
 
+  const simulateLoading = () => {
+    setIsLoading(true);
+    setProgress(0);
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += 10;
+      if (currentProgress <= 100) {
+        setProgress(currentProgress);
+      } else {
+        clearInterval(interval);
+        // Proceed with navigation after loading is complete
+        // This part will be moved into handleNext after actual API call
+      }
+    }, 200); // Adjust timing as needed
+    return interval; // Return interval to clear it if needed
+  };
+
   const handleNext = async () => {
+    const loadingInterval = simulateLoading(); // Start loading simulation
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 2200)); // Adjust delay to match progress bar duration + a bit
+
+    clearInterval(loadingInterval); // Stop progress simulation
+    setIsLoading(false); // Set loading to false
+    setProgress(100); // Ensure progress is 100%
+
     let config: any = { mlType, algorithm, selectedColumns };
     if (mlType === 'clustering') {
       config.numClusters = numClusters;
@@ -127,9 +156,24 @@ export default function ConfigureModelForm() {
         <CardDescription>Set the parameters for your machine learning task.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {isLoading && (
+          <div className="w-full text-center mb-4">
+            <p className="text-lg font-semibold mb-2">Processing your request...</p>
+            <div className="relative w-full">
+              <Progress value={progress} className="w-full h-6" /> {/* Adjusted height */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-semibold text-blue-700"> {/* Changed text-white to text-blue-700 and removed mix-blend-difference */}
+                  {`${Math.round(progress)}%`}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">This may take a few moments, especially with large datasets.</p>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="ml-type">Type of Machine Learning</Label>
-          <Select value={mlType} onValueChange={setMlType}>
+          <Select value={mlType} onValueChange={setMlType} disabled={isLoading}>
             <SelectTrigger id="ml-type">
               <SelectValue placeholder="Select ML Type" />
             </SelectTrigger>
@@ -146,7 +190,7 @@ export default function ConfigureModelForm() {
         {/* Algorithm Selection - Dynamic based on mlType */}
         <div className="space-y-2">
           <Label htmlFor="algorithm">{getAlgorithmLabel()}</Label>
-          <Select value={algorithm} onValueChange={setAlgorithm} disabled={renderAlgorithmOptions().length === 0}>
+          <Select value={algorithm} onValueChange={setAlgorithm} disabled={isLoading || renderAlgorithmOptions().length === 0}>
             <SelectTrigger id="algorithm">
               <SelectValue placeholder={`Select ${getAlgorithmLabel()}`} />
             </SelectTrigger>
@@ -167,11 +211,12 @@ export default function ConfigureModelForm() {
               <Slider
                 id="num-clusters"
                 min={2}
-                max={100} // As per the image
+                max={100}
                 step={1}
                 value={[numClusters]}
                 onValueChange={(value) => setNumClusters(value[0])}
                 className="mt-2"
+                disabled={isLoading}
               />
               <p className="text-sm text-muted-foreground">
                 Select the number of clusters to generate (2-100).
@@ -191,6 +236,7 @@ export default function ConfigureModelForm() {
               value={[polynomialDegree]}
               onValueChange={(value) => setPolynomialDegree(value[0])}
               className="mt-2"
+              disabled={isLoading}
             />
             <p className="text-sm text-muted-foreground">
               Select the degree for polynomial regression (2-10).
@@ -199,7 +245,7 @@ export default function ConfigureModelForm() {
         )}
         
         <Alert>
-          <InfoCircledIcon className="h-4 w-4" /> {/* Adjust icon as needed */}
+          <InfoCircledIcon className="h-4 w-4" />
           <AlertTitle>What happens next?</AlertTitle>
           <AlertDescription>
             <ul className="list-disc list-inside space-y-1 mt-1">
@@ -210,11 +256,12 @@ export default function ConfigureModelForm() {
             <p className="mt-2">This process may take a few moments depending on the size and complexity of your data.</p>
           </AlertDescription>
         </Alert>
-
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-6">
-        <Button variant="outline" onClick={handleBack}>Back</Button>
-        <Button onClick={handleNext}>Next</Button>
+        <Button variant="outline" onClick={handleBack} disabled={isLoading}>Back</Button>
+        <Button onClick={handleNext} disabled={isLoading}>
+          {isLoading ? 'Processing...' : 'Next'}
+        </Button>
       </CardFooter>
     </Card>
   );
