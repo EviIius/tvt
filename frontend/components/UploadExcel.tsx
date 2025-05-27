@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { FileSpreadsheet, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { Button } from "@/components/ui/button"; // Import the Button component
+import { Button } from "@/components/ui/button";
 
-interface UploadExcelProps {
+interface UploadFileProps { // Renamed from UploadExcelProps
   onUpload: (file: File, headers: string[]) => void;
 }
 
-export default function UploadExcel({ onUpload }: UploadExcelProps) {
+export default function UploadFile({ onUpload }: UploadFileProps) { // Renamed from UploadExcel
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState('');
@@ -20,40 +20,66 @@ export default function UploadExcel({ onUpload }: UploadExcelProps) {
 
   const handleDragLeave = () => setIsDragging(false);
 
-  const processExcelFile = async (file: File) => {
+  const processFile = async (file: File) => { // Renamed from processExcelFile
     try {
       setError('');
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        setError('Please upload an Excel file (.xlsx or .xls)');
-        return;
-      }
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      if (jsonData.length === 0) {
-        setError('The Excel file is empty');
-        return;
-      }
-      // Ensure headers are strings and filter out empty/invalid ones
-      const rawHeaders = jsonData[0] as any[]; // Get the first row
-      if (!rawHeaders || rawHeaders.length === 0) {
-        setError('No columns found in the Excel file');
-        return;
-      }
-      
-      const headers = rawHeaders
-        .map(header => header !== null && header !== undefined ? String(header).trim() : '')
-        .filter(header => header !== '');
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const allowedExtensions = ['xlsx', 'xls', 'csv', 'pkl', 'parquet'];
 
-      if (headers.length === 0) {
-        setError('No valid column headers found in the Excel file. Please ensure the first row contains text.');
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        setError('Please upload an Excel (.xlsx, .xls), CSV (.csv), Pickle (.pkl), or Parquet (.parquet) file.');
         return;
       }
-      setFileName(file.name);
-      onUpload(file, headers);
+
+      if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        if (jsonData.length === 0) {
+          setError('The Excel file is empty');
+          return;
+        }
+        const rawHeaders = jsonData[0] as any[];
+        if (!rawHeaders || rawHeaders.length === 0) {
+          setError('No columns found in the Excel file');
+          return;
+        }
+        const headers = rawHeaders
+          .map(header => header !== null && header !== undefined ? String(header).trim() : '')
+          .filter(header => header !== '');
+        if (headers.length === 0) {
+          setError('No valid column headers found in the Excel file. Please ensure the first row contains text.');
+          return;
+        }
+        setFileName(file.name);
+        onUpload(file, headers);
+      } else if (fileExtension === 'csv') {
+        // For CSV, we can read the first line for headers
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          const firstLine = text.split(/\r?\n/)[0]; // Corrected line splitting
+          const headers = firstLine.split(',').map(h => h.trim()).filter(h => h !== '');
+          if (headers.length === 0) {
+            setError('No valid column headers found in the CSV file. Please ensure the first row contains text.');
+            return;
+          }
+          setFileName(file.name);
+          onUpload(file, headers);
+        };
+        reader.onerror = () => {
+          setError('Failed to read the CSV file.');
+        };
+        reader.readAsText(file);
+      } else {
+        // For pkl and parquet, header extraction might be complex or not applicable on the client-side.
+        // We'll pass the file and let the backend handle it. Headers can be an empty array or a placeholder.
+        setFileName(file.name);
+        onUpload(file, []); // Or pass a placeholder like ['File Content']
+      }
     } catch (err) {
-      setError('Failed to process the Excel file. Please try again.');
+      setError('Failed to process the file. Please try again.');
     }
   };
 
@@ -62,14 +88,14 @@ export default function UploadExcel({ onUpload }: UploadExcelProps) {
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      processExcelFile(file);
+      processFile(file); // Use processFile
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      processExcelFile(file);
+      processFile(file); // Use processFile
     }
   };
 
@@ -90,10 +116,12 @@ export default function UploadExcel({ onUpload }: UploadExcelProps) {
             <FileSpreadsheet className="h-12 w-12 text-primary" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-foreground">Upload Excel File</h3>
-            <p className="text-sm text-muted-foreground">Drag and drop your Excel file here, or click to browse</p>
+            {/* Changed title and description */}
+            <h3 className="text-lg font-semibold text-foreground">Upload Data File</h3>
+            <p className="text-sm text-muted-foreground">Drag and drop your Excel, CSV, Pickle, or Parquet file here, or click to browse</p>
           </div>
-          <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFileChange} />
+          {/* Updated accept attribute */}
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv,.pkl,.parquet" className="hidden" onChange={handleFileChange} />
           <Button type="button" variant="outline" onClick={handleButtonClick}>
             <Upload className="h-5 w-5 mr-2" /> Browse Files
           </Button>

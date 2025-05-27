@@ -4,3 +4,5 @@ python-multipart       # for file uploads
 pandas
 scikit-learn
 numpy
+pyarrow                # for parquet files
+pickle                 # for pickle files (usually built-in, but good to list if specific version needed or for clarity)
